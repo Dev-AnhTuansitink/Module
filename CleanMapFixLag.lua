@@ -71,12 +71,20 @@ local decalsyeeted = true
 -- Hàm xử lý chung để tái sử dụng cho cả đồ họa cũ và đồ họa mới sinh ra
 local function OptimizeObject(v)
     pcall(function()
-        -- 1. Biến mọi thứ thành vô hình (Transparency = 1)
-        if v:IsA("BasePart") or v:IsA("Decal") or v:IsA("Texture") then
+        -- KIỂM TRA XEM VẬT THỂ CÓ PHẢI LÀ PLAYER HOẶC MOB KHÔNG (Dựa vào Humanoid)
+        local isCharacter = false
+        if v.Parent and v.Parent:FindFirstChild("Humanoid") then
+            isCharacter = true
+        elseif v.Parent and v.Parent.Parent and v.Parent.Parent:FindFirstChild("Humanoid") then
+            isCharacter = true
+        end
+
+        -- 1. Biến mọi thứ thành vô hình (NGOẠI TRỪ PLAYER VÀ MOB)
+        if (v:IsA("BasePart") or v:IsA("Decal") or v:IsA("Texture")) and not isCharacter then
             v.Transparency = 1
         end
 
-        -- 2. Tước bỏ vật liệu và kết cấu
+        -- 2. Tước bỏ vật liệu và kết cấu (Áp dụng cho mọi thứ để giảm lag)
         if v:IsA("BasePart") and not v:IsA("MeshPart") then
             v.Material = Enum.Material.Plastic
             v.Reflectance = 0
@@ -89,7 +97,7 @@ local function OptimizeObject(v)
         elseif (v:IsA("Decal") or v:IsA("Texture")) and decalsyeeted then
             v.Texture = ""
             
-        -- 3. Xóa hiệu ứng VFX
+        -- 3. Xóa hiệu ứng VFX (Ngoại trừ quần áo của nhân vật)
         elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
             v.Lifetime = NumberRange.new(0)
         elseif v:IsA("Explosion") then
@@ -97,12 +105,6 @@ local function OptimizeObject(v)
             v.BlastRadius = 1
         elseif v:IsA("Fire") or v:IsA("SpotLight") or v:IsA("Smoke") or v:IsA("Sparkles") then
             v.Enabled = false
-            
-        -- 4. Xóa quần áo
-        elseif v:IsA("ShirtGraphic") and decalsyeeted then
-            v.Graphic = ""
-        elseif (v:IsA("Shirt") or v:IsA("Pants")) and decalsyeeted then
-            v[v.ClassName.."Template"] = ""
         end
     end)
 end
